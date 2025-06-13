@@ -12,7 +12,7 @@ app = FastAPI()
 
 # ✅ Replace with your actual frontend domain from IONOS
 origins = [
-    "https://yourfrontenddomain.com",  # e.g., "https://wildmindai.com"
+    "https://wildmindai.com",  # e.g., "https://wildmindai.com"
 ]
 
 # Add CORS middleware
