@@ -4,15 +4,15 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from uuid import uuid4
 import torch
-from diffusers import BitsAndBytesConfig, SD3Transformer2DModel, StableDiffusion3Pipeline
+from diffusers import StableDiffusion3Pipeline
 import os
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# ✅ Replace with your actual frontend domain from IONOS
+# ✅ Replace with your actual frontend domain
 origins = [
-    "https://wildmindai.com",  # e.g., "https://wildmindai.com"
+    "https://wildmindai.com",  # Replace with your production frontend domain
 ]
 
 # Add CORS middleware
@@ -27,33 +27,17 @@ app.add_middleware(
 # Define the model ID
 model_id = "stabilityai/stable-diffusion-3.5-medium"
 
-# Create a directory for generated images if not exists
+# Create output directory if it doesn't exist
 os.makedirs("generated", exist_ok=True)
 
-# Load quantized model configuration
-nf4_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16
-)
-
-# Load the transformer model
-model_nf4 = SD3Transformer2DModel.from_pretrained(
-    model_id,
-    subfolder="transformer",
-    quantization_config=nf4_config,
-    torch_dtype=torch.float16
-)
-
-# Load the full SD3.5 pipeline
+# Load Stable Diffusion 3.5 pipeline without BitsAndBytesConfig
 pipeline = StableDiffusion3Pipeline.from_pretrained(
     model_id,
-    transformer=model_nf4,
     torch_dtype=torch.float16
 )
 pipeline.enable_model_cpu_offload()
 
-# Request body structure
+# Define request schema
 class PromptRequest(BaseModel):
     prompt: str
 
@@ -72,7 +56,7 @@ async def generate_image(req: PromptRequest):
 
     return {"url": f"/images/{filename}"}
 
-# GET endpoint to retrieve the generated image
+# GET endpoint to retrieve image
 @app.get("/images/{filename}")
 async def get_image(filename: str):
     filepath = f"generated/{filename}"
